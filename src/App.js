@@ -5,7 +5,7 @@ import Cart from "./components/Cart/Cart";
 import Layout from "./components/Layout/Layout";
 import Products from "./components/Shop/Products";
 import Notification from "./components/UI/Notification";
-import { sendCartData } from "./store/cart";
+import { fetchCartData, sendCartData } from "./store/cart-action";
 
 let isInitial = true;
 
@@ -18,10 +18,13 @@ function App() {
   useEffect(() => {
     if (isInitial) {
       isInitial = false;
+      dispatch(fetchCartData());
       return;
     }
-    dispatch(sendCartData(cart));
-  }, [cart]);
+    if (cart.changed) {
+      dispatch(sendCartData(cart)); // extra logic if  you add any product then only this fun will run now it not run when fetching data and cart change bexause of condition
+    }
+  }, [cart, dispatch]);
 
   return (
     <>

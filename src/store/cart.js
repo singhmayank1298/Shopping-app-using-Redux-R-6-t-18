@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { uiAction } from "./ui";
-const initialState = { isCartOpen: false, cartItems: [] }; // 3 things
+
+const initialState = { isCartOpen: false, cartItems: [], changed: false }; // 3 things
 const cartSlice = createSlice({
   name: "cart",
   initialState: initialState,
@@ -16,6 +16,7 @@ const cartSlice = createSlice({
         if (array[i].id === newObj.id) {
           state.cartItems[i].quantity++;
           state.cartItems[i].totalPrice += newObj.initialPrice;
+          state.changed = true; // extra logic for extra api call fix automatic put request happning
           return;
         }
       }
@@ -34,58 +35,16 @@ const cartSlice = createSlice({
           }
           state.cartItems[i].quantity--;
           state.cartItems[i].totalPrice -= newObj.initialPrice;
+          state.changed = true; // extra logic for extra api call fix automatic put request happning
           return;
         }
       }
     },
+    initialItem(state, action) {
+      state.cartItems = action.payload;
+    },
   },
 });
-
-export const sendCartData = (cart) => {
-  return async (dispatch) => {
-    // this dispatch will automatic given by redux toolkit so we can use dispatch hook in this finction
-    dispatch(
-      uiAction.notificationContent({
-        title: "Sending...",
-        message: "Sending cart data",
-        status: "pending",
-      })
-    );
-    const sendRequest = async () => {
-      const response = await fetch(
-        "https://shoping-app-using-redux-default-rtdb.firebaseio.com/cart.json",
-        {
-          method: "PUT",
-          body: JSON.stringify(cart),
-          headers: {
-            "content-type": "application/json",
-          },
-        }
-      );
-      if (response.ok === false) {
-        throw new Error("error");
-      }
-    };
-    try {
-      await sendRequest();
-      dispatch(
-        uiAction.notificationContent({
-          title: "Success",
-          message: "sent cart data successfully",
-          status: "success",
-        })
-      );
-    } catch (error) {
-      dispatch(
-        uiAction.notificationContent({
-          title: "Error",
-          message: "Sending cart data fails !!",
-          status: "error",
-        })
-      );
-    }
-  };
-};
 
 export const cartAction = cartSlice.actions;
 export default cartSlice.reducer;
